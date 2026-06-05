@@ -31,7 +31,7 @@ A **manual mode** in the popup lets you paste any post/job text to draft or anal
    - **Résumé** (PDF or `.txt`, parsed in your browser; review/edit the extracted text), then **Save**.
 3. Go to LinkedIn — the buttons appear on posts (feed, post permalinks, and search results).
 
-Get an Anthropic key at https://console.anthropic.com → API Keys.
+Get an Anthropic key at https://console.anthropic.com → API Keys or ChatGPT key from https://platform.openai.com/
 
 ## Optional: fetch linked job pages
 
