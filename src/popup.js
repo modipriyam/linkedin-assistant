@@ -34,14 +34,17 @@ async function withBusy(ids, fn) {
   }
 }
 
+// Returns { post, reason } so the UI can explain exactly why nothing was found.
 function getCurrentPost() {
   return new Promise((resolve) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tab = tabs && tabs[0];
-      if (!tab || !/^https:\/\/www\.linkedin\.com\//.test(tab.url || "")) return resolve(null);
+      if (!tab || !/^https:\/\/([a-z-]+\.)?linkedin\.com\//.test(tab.url || ""))
+        return resolve({ post: null, reason: "not_linkedin" });
       chrome.tabs.sendMessage(tab.id, { type: "getCurrentPost" }, (resp) => {
-        if (chrome.runtime.lastError) return resolve(null);
-        resolve(resp && resp.ok ? resp.post : null);
+        if (chrome.runtime.lastError) return resolve({ post: null, reason: "no_content_script" });
+        if (!resp || !resp.ok || !resp.post) return resolve({ post: null, reason: "no_post" });
+        resolve({ post: resp.post, reason: null });
       });
     });
   });
@@ -135,9 +138,15 @@ function postKey(p) {
 }
 async function refreshSource(force = false) {
   $("srcinfo").textContent = "Loading current post…";
-  currentPost = await getCurrentPost();
-  if (!currentPost) {
-    $("srcinfo").textContent = "No LinkedIn post detected — paste text below.";
+  const { post, reason } = await getCurrentPost();
+  currentPost = post;
+  if (!post) {
+    const msgs = {
+      not_linkedin: "Open a LinkedIn tab (feed, a post, a job, or a profile), then click ↻ — or paste text below.",
+      no_content_script: "Can't reach the page. Reload the extension at chrome://extensions, then open a NEW LinkedIn tab.",
+      no_post: "On LinkedIn but no post found here. Open the post/job/profile's own page, or highlight its text, then ↻.",
+    };
+    $("srcinfo").textContent = msgs[reason] || "No LinkedIn post detected — paste text below.";
     return;
   }
   const who = currentPost.authorName || "a post";

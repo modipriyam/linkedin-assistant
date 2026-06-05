@@ -134,7 +134,7 @@ async function fetchUrl(url) {
     host = new URL(url).hostname.toLowerCase();
   } catch {}
   if (/(^|\.)linkedin\.com$/.test(host))
-    throw new FriendlyError("LinkedIn pages can't be fetched. Open the job in a tab and click Analyze/Draft there — it reads the page directly.");
+    throw new FriendlyError("LinkedIn links can't be fetched — clear this box, open that post/job/profile in a tab, and click Generate/Analyze (it reads the open page).");
 
   // Allow if we already have permission for this origin or the broad opt-in.
   let originPattern = "https://*/*";
