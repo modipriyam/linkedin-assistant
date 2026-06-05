@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LinkedIn Assistant",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Draft tailored connection messages, run a resume keyword-gap check, and find who you know at a company — from the post you're viewing.",
   "permissions": [
     "storage",

@@ -7,7 +7,8 @@
   const POST_SELECTOR = [
     "div.feed-shared-update-v2",
     "div.fie-impression-container",
-    'div[data-urn^="urn:li:activity"]',
+    '[data-urn*="urn:li:activity"]',
+    '[data-id*="urn:li:activity"]',
   ].join(",");
 
   // ---- small DOM helpers ---------------------------------------------------
@@ -604,7 +605,15 @@
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg && msg.type === "getCurrentPost") {
       // Prefer a job page, then a profile page, otherwise the most-visible feed post.
-      sendResponse({ ok: true, post: extractJob() || extractProfile() || pickVisiblePost() });
+      let post = extractJob() || extractProfile() || pickVisiblePost();
+      // Last resort: use whatever text the user has highlighted on the page.
+      if (!post) {
+        const sel = (window.getSelection && window.getSelection().toString().trim()) || "";
+        if (sel.length > 30) {
+          post = { authorName: "", headline: "", degree: "", authorProfileUrl: "", postText: sel, role: "", previewCard: "", links: [], companyLinks: [], postUrl: location.href };
+        }
+      }
+      sendResponse({ ok: true, post });
     }
     return false;
   });
