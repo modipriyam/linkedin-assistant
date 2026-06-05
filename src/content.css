@@ -1,0 +1,171 @@
+/* content.css — scoped (lca-) UI, professional look matching the popup. */
+
+:root {
+  --lca-brand: #0a66c2;
+  --lca-brand-2: #1b4ad1;
+  --lca-brand-deep: #0a3a8c;
+  --lca-accent: #7c3aed;
+  --lca-ink: #16202b;
+  --lca-muted: #5b6b7b;
+  --lca-border: #e2e8f1;
+  --lca-bg: #ffffff;
+  --lca-soft: #f4f7fb;
+  --lca-good: #067647;
+  --lca-bad: #b42318;
+  --lca-shadow: 0 18px 48px rgba(16, 24, 40, 0.18), 0 4px 12px rgba(16, 24, 40, 0.1);
+  --lca-radius: 16px;
+  --lca-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ---- in-post action bar ---- */
+.lca-bar {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 13px;
+  margin: 0 0 4px;
+  border-bottom: 1px solid var(--lca-border);
+  background: linear-gradient(0deg, var(--lca-soft), #fff);
+  font-family: var(--lca-font);
+}
+.lca-action {
+  appearance: none;
+  border: 1px solid #d6e0ec;
+  background: #fff;
+  color: var(--lca-brand);
+  font-weight: 600;
+  font-size: 12.5px;
+  line-height: 1;
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  transition: background 0.14s ease, border-color 0.14s ease, transform 0.06s ease, box-shadow 0.14s ease;
+  font-family: var(--lca-font);
+}
+.lca-action:hover {
+  background: #f3f8ff;
+  border-color: var(--lca-brand);
+  box-shadow: 0 2px 8px rgba(10, 102, 194, 0.18);
+}
+.lca-action:active { transform: translateY(1px); }
+.lca-flash { font-size: 12px; font-weight: 700; color: var(--lca-good); margin-left: 4px; align-self: center; }
+
+/* ---- floating result panel ---- */
+.lca-panel {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 2147483646;
+  width: 392px;
+  max-width: calc(100vw - 40px);
+  max-height: min(80vh, 740px);
+  display: flex;
+  flex-direction: column;
+  background: var(--lca-bg);
+  border: 1px solid var(--lca-border);
+  border-radius: var(--lca-radius);
+  box-shadow: var(--lca-shadow);
+  font-family: var(--lca-font);
+  color: var(--lca-ink);
+  overflow: hidden;
+  animation: lca-rise 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes lca-rise { from { opacity: 0; transform: translateY(10px) scale(0.99); } to { opacity: 1; transform: none; } }
+.lca-hidden { display: none !important; }
+
+.lca-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 15px;
+  background: linear-gradient(135deg, var(--lca-brand) 0%, var(--lca-brand-2) 70%, var(--lca-brand-deep) 100%);
+  color: #fff;
+}
+.lca-brand { display: inline-flex; align-items: center; gap: 9px; }
+.lca-dot { width: 11px; height: 11px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.22); }
+.lca-title { font-weight: 700; font-size: 14px; letter-spacing: 0.2px; }
+.lca-headbtns { display: inline-flex; align-items: center; gap: 4px; }
+.lca-icon {
+  appearance: none; border: none; background: rgba(255, 255, 255, 0.14); cursor: pointer;
+  color: #fff; font-size: 13px; line-height: 1; padding: 6px 7px; border-radius: 8px; transition: background 0.15s ease;
+}
+.lca-icon:hover { background: rgba(255, 255, 255, 0.3); }
+
+.lca-tabs { display: flex; gap: 3px; padding: 7px 10px 0; background: #fff; border-bottom: 1px solid var(--lca-border); }
+.lca-tab {
+  appearance: none; border: none; background: transparent; cursor: pointer; font-family: var(--lca-font);
+  flex: 1; font-size: 12px; font-weight: 700; color: var(--lca-muted);
+  padding: 9px 6px 10px; border-bottom: 2.5px solid transparent; margin-bottom: -1px; border-radius: 8px 8px 0 0;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.lca-tab:hover { color: var(--lca-ink); background: rgba(10, 102, 194, 0.06); }
+.lca-tab.lca-tabactive { color: var(--lca-brand); border-bottom-color: var(--lca-brand); background: rgba(10, 102, 194, 0.07); }
+
+.lca-body { padding: 13px 15px; overflow-y: auto; }
+
+.lca-text {
+  width: 100%; box-sizing: border-box; min-height: 132px; resize: vertical;
+  border: 1px solid var(--lca-border); border-radius: 11px; padding: 11px 12px;
+  font-family: var(--lca-font); font-size: 13.5px; line-height: 1.55; color: var(--lca-ink); background: #fff; outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.lca-text:focus { border-color: var(--lca-brand); box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.16); }
+.lca-text[readonly] { background: var(--lca-soft); white-space: pre-wrap; }
+
+.lca-meta { min-height: 18px; margin: 6px 2px 0; }
+.lca-count { font-size: 12px; color: var(--lca-muted); font-weight: 600; }
+.lca-count.lca-over { color: var(--lca-bad); }
+
+.lca-urlrow { display: flex; gap: 7px; margin-top: 10px; }
+.lca-url {
+  flex: 1; box-sizing: border-box; border: 1px solid var(--lca-border); border-radius: 10px;
+  padding: 9px 11px; font-size: 13px; font-family: var(--lca-font); outline: none; color: var(--lca-ink);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.lca-url:focus { border-color: var(--lca-brand); box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.16); }
+
+.lca-company { display: flex; flex-direction: column; gap: 8px; }
+.lca-label { font-size: 12px; font-weight: 700; color: var(--lca-ink); }
+.lca-companyinput { font-weight: 600; }
+.lca-links { display: flex; flex-direction: column; gap: 7px; margin-top: 4px; }
+.lca-pill {
+  display: block; text-decoration: none;
+  border: 1px solid var(--lca-border); border-left: 3px solid var(--lca-brand); border-radius: 10px;
+  padding: 10px 13px; font-size: 13px; font-weight: 600; color: var(--lca-brand); background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05); transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+.lca-pill:hover { background: #f5f9ff; box-shadow: 0 4px 14px rgba(16, 24, 40, 0.1); transform: translateY(-1px); }
+.lca-note { font-size: 11.5px; color: var(--lca-muted); line-height: 1.5; margin-top: 4px; }
+.lca-muted { font-size: 12px; color: var(--lca-muted); }
+
+.lca-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 11px 15px; border-top: 1px solid var(--lca-border); background: var(--lca-soft);
+}
+.lca-status { font-size: 12px; color: var(--lca-muted); flex: 1; min-height: 16px; font-weight: 500; }
+.lca-status.lca-good { color: var(--lca-good); }
+.lca-status.lca-bad { color: var(--lca-bad); }
+
+.lca-actions { display: flex; gap: 7px; }
+.lca-btn {
+  appearance: none; cursor: pointer;
+  border: 1px solid var(--lca-border); background: #fff; color: var(--lca-ink);
+  font-weight: 600; font-size: 12.5px; padding: 8px 13px; border-radius: 999px;
+  font-family: var(--lca-font); transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease, opacity 0.15s ease;
+}
+.lca-btn:hover { background: #f3f6fa; border-color: #cfd8e3; }
+.lca-btn:active { transform: translateY(1px); }
+.lca-btn.lca-primary {
+  background: linear-gradient(135deg, var(--lca-brand), var(--lca-brand-2)); border-color: transparent; color: #fff;
+  box-shadow: 0 2px 8px rgba(10, 102, 194, 0.35);
+}
+.lca-btn.lca-primary:hover { background: linear-gradient(135deg, #0b5cad, #1740b8); box-shadow: 0 4px 14px rgba(10, 102, 194, 0.42); }
+.lca-btn.lca-ghost { color: var(--lca-brand); }
+.lca-usefetch { white-space: nowrap; }
+
+@media (prefers-color-scheme: dark) {
+  .lca-panel { --lca-ink: #e9eef5; --lca-bg: #1a1f26; --lca-soft: #222932; --lca-border: #333d49; --lca-muted: #9fb0c2; }
+  .lca-text, .lca-url, .lca-pill, .lca-btn, .lca-companyinput { background: #20262e; color: var(--lca-ink); }
+  .lca-text[readonly] { background: #222932; }
+  .lca-tabs { background: #1a1f26; }
+}

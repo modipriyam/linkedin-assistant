@@ -1,0 +1,10 @@
+{
+  "name": "linkedin-connect-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Chrome extension: draft LinkedIn connection messages, resume keyword-gap analysis, and 'who do I know here' — all from the post on screen.",
+  "scripts": {
+    "test": "node --test src/parse.test.js"
+  }
+}

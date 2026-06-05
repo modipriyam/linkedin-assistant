@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="popup.css" />
+    <title>LinkedIn Assistant</title>
+  </head>
+  <body>
+    <header class="hd">
+      <span class="brand"><span class="dot"></span> LinkedIn Assistant</span>
+      <span class="hdright">
+        <button id="gear" class="iconbtn" title="Settings" aria-label="Settings">⚙</button>
+        <span class="ver" id="ver"></span>
+      </span>
+    </header>
+
+    <!-- 3 main sections -->
+    <nav class="tabs" id="tabs">
+      <button class="tab tab-active" data-tab="draft">✦ Draft message</button>
+      <button class="tab" data-tab="resume">✦ Resume keywords</button>
+      <button class="tab" data-tab="who">✦ Who do I know</button>
+    </nav>
+
+    <!-- shared post-source banner (for the 3 action tabs) -->
+    <div id="srcbar" class="srcbar">
+      <span id="srcinfo" class="srcinfo">Loading current post…</span>
+      <button id="srcReload" class="link" type="button">↻ use post in tab</button>
+    </div>
+
+    <!-- shared job URL (used by all three tabs) -->
+    <div id="urlbar" class="urlbar">
+      <input id="job_url" type="url" placeholder="Optional: job posting URL — shared by all tabs" />
+      <button id="job_fetch" type="button">Use URL</button>
+    </div>
+
+    <main>
+      <!-- DRAFT -->
+      <section class="pane" id="pane-draft">
+        <label class="lbl">Source post / job text</label>
+        <textarea id="d_post" rows="3" placeholder="Auto-filled from the post in your LinkedIn tab — or paste here."></textarea>
+        <div class="row">
+          <select id="d_style" title="Message style">
+            <option value="auto">Auto (match context)</option>
+            <option value="recruiter">Job connection (recruiter)</option>
+            <option value="conversational">Conversational</option>
+            <option value="curious">Curious question</option>
+            <option value="warm">Warm</option>
+            <option value="direct">Direct</option>
+            <option value="bold">Bold / stand out</option>
+          </select>
+          <button id="d_variants" title="Get 3 different angles to choose from">✨ 3 variants</button>
+        </div>
+        <label class="lbl">Draft</label>
+        <textarea id="d_out" rows="6" placeholder="Your message appears here — editable."></textarea>
+        <div class="meta" id="d_meta"></div>
+        <div class="actions">
+          <button id="d_gen" class="primary">Generate</button>
+          <button id="d_shorten">Shorten</button>
+          <button id="d_copy">Copy</button>
+          <span class="status" id="d_status"></span>
+        </div>
+      </section>
+
+      <!-- RESUME -->
+      <section class="pane hidden" id="pane-resume">
+        <label class="lbl">Job / role text</label>
+        <textarea id="r_post" rows="3" placeholder="Auto-filled from the post — or paste the job description."></textarea>
+        <p class="hint" id="r_resumehint"></p>
+        <label class="lbl">Keyword-gap report</label>
+        <div id="r_out" class="report" data-empty="1">Match score, missing keywords, and suggestions appear here.</div>
+        <div class="actions">
+          <button id="r_gen" class="primary">Analyze</button>
+          <button id="r_copy">Copy</button>
+          <span class="status" id="r_status"></span>
+        </div>
+      </section>
+
+      <!-- WHO DO I KNOW -->
+      <section class="pane hidden" id="pane-who">
+        <div id="w_body" class="who"></div>
+        <div class="actions">
+          <button id="w_gen" class="primary">Find people</button>
+          <span class="status" id="w_status"></span>
+        </div>
+      </section>
+
+      <!-- SETTINGS (behind the gear) -->
+      <section class="pane hidden" id="pane-settings">
+        <div class="card">
+          <h2>Model</h2>
+          <label class="lbl">Provider</label>
+          <select id="provider">
+            <option value="anthropic">Anthropic (Claude)</option>
+            <option value="openai">OpenAI-compatible</option>
+          </select>
+          <label class="lbl">API key</label>
+          <input id="apiKey" type="password" placeholder="stored locally on this device" autocomplete="off" />
+          <div id="baseUrlRow" class="hidden">
+            <label class="lbl">Base URL</label>
+            <input id="baseUrl" type="url" placeholder="https://api.openai.com/v1" />
+          </div>
+          <label class="lbl">Model</label>
+          <input id="model" type="text" />
+          <p class="hint" id="modelHint"></p>
+        </div>
+
+        <div class="card">
+          <h2>About you</h2>
+          <label class="lbl">About me (sender background)
+            <button id="fromResume" class="link" type="button">fill from resume</button>
+          </label>
+          <textarea id="aboutMe" rows="3" placeholder="A line or two on your background, used to personalize messages."></textarea>
+          <label class="lbl">What I'm looking for</label>
+          <input id="goal" type="text" placeholder="e.g. Senior data engineer roles in fintech" />
+          <div class="row">
+            <div class="col"><label class="lbl">Tone</label><input id="tone" type="text" placeholder="warm, professional, specific" /></div>
+            <div class="col narrow"><label class="lbl">Note limit</label><input id="charLimit" type="number" min="100" max="300" step="10" value="200" /></div>
+          </div>
+          <label class="lbl">Extra instructions (optional)</label>
+          <input id="extra" type="text" placeholder="e.g. mention I'm open to relocating" />
+          <label class="toggle"><input id="fetchEnabled" type="checkbox" /><span>Allow fetching linked job pages (asks permission)</span></label>
+        </div>
+
+        <div class="card">
+          <h2>Resume</h2>
+          <input id="resumeFile" type="file" accept=".pdf,.txt,text/plain,application/pdf" />
+          <p class="hint">PDF or .txt, parsed in your browser and stored locally; review/edit below.</p>
+          <textarea id="resumeText" rows="5" placeholder="Resume text appears here after upload — or paste it."></textarea>
+          <p class="hint" id="resumeStatus"></p>
+        </div>
+
+        <div class="saverow">
+          <button id="save" class="primary">Save</button>
+          <span id="status" class="status"></span>
+        </div>
+      </section>
+    </main>
+
+    <script src="lib/pdf.min.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
