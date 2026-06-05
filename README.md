@@ -50,18 +50,3 @@ instead"** fallback is always available.
 - LinkedIn limits: free accounts get ~5 personalized invites/month and throttle heavy searching.
 - Reading search results / fetching pages is best-effort and a bit ToS-sensitive; deep-link-only and
   manual paste are the safe fallbacks.
-
-## Develop
-
-- Pure URL/company parsing lives in `parse.js`; run its tests with:
-  ```
-  node --test
-  ```
-- Files: `manifest.json`, `content.js`/`content.css` (in-page UI), `background.js` (model calls,
-  company resolution, URL fetch), `prompts.js` (hardened prompt builders), `parse.js`, `popup.*`,
-  `lib/pdf.*` (résumé PDF parsing).
-
-## Roadmap
-
-Profile auto-grounding, A/B drafts, feed relevance-highlighting, an outreach tracker (CRM), DOCX
-résumés + deeper ATS scoring, and a local/offline model option (Ollama/LM Studio).
