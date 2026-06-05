@@ -34,20 +34,132 @@ async function withBusy(ids, fn) {
   }
 }
 
-// Returns { post, reason } so the UI can explain exactly why nothing was found.
-function getCurrentPost() {
-  return new Promise((resolve) => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const tab = tabs && tabs[0];
-      if (!tab || !/^https:\/\/([a-z-]+\.)?linkedin\.com\//.test(tab.url || ""))
-        return resolve({ post: null, reason: "not_linkedin" });
-      chrome.tabs.sendMessage(tab.id, { type: "getCurrentPost" }, (resp) => {
-        if (chrome.runtime.lastError) return resolve({ post: null, reason: "no_content_script" });
-        if (!resp || !resp.ok || !resp.post) return resolve({ post: null, reason: "no_post" });
-        resolve({ post: resp.post, reason: null });
+// Self-contained reader injected into the active LinkedIn tab on demand. Must not
+// reference any outer scope — it is serialized and executed in the page.
+function pageExtract() {
+  const firstText = (root, sels) => {
+    for (const s of sels) {
+      const n = root.querySelector(s);
+      const t = n && (n.innerText || n.textContent || "").trim();
+      if (t) return t;
+    }
+    return "";
+  };
+  const abs = (h) => {
+    try {
+      return new URL(h, location.href).href;
+    } catch {
+      return h;
+    }
+  };
+
+  // Job page
+  const onJob =
+    /\/jobs\//.test(location.pathname) ||
+    document.querySelector("#job-details, .jobs-description, .job-details-jobs-unified-top-card__job-title, .jobs-unified-top-card__job-title");
+  if (onJob) {
+    const title = firstText(document, [".job-details-jobs-unified-top-card__job-title", ".jobs-unified-top-card__job-title", ".t-24", "h1"]);
+    const company = firstText(document, [".job-details-jobs-unified-top-card__company-name a", ".job-details-jobs-unified-top-card__company-name", ".jobs-unified-top-card__company-name a", ".jobs-unified-top-card__company-name"]);
+    const loc = firstText(document, [".job-details-jobs-unified-top-card__primary-description-container", ".jobs-unified-top-card__primary-description", ".jobs-unified-top-card__bullet"]);
+    const desc = firstText(document, ["#job-details", ".jobs-description__content", ".jobs-box__html-content", ".jobs-description-content__text", ".jobs-description"]);
+    if (title || desc) {
+      const companyLinks = [];
+      document.querySelectorAll('a[href*="/company/"]').forEach((a) => {
+        const h = abs(a.getAttribute("href"));
+        if (/\/company\//.test(h) && !companyLinks.includes(h)) companyLinks.push(h);
       });
+      return { authorName: company || title || "this job", headline: title, degree: "", authorProfileUrl: "", postText: [title, company, loc, "", desc].filter(Boolean).join("\n"), role: title, previewCard: "", links: [location.href], companyLinks, postUrl: location.href.split("?")[0], isJob: true };
+    }
+  }
+
+  // Profile page
+  if (/\/in\//.test(location.pathname)) {
+    const name = firstText(document, [".text-heading-xlarge", "main h1", "h1.inline.t-24"]);
+    if (name) {
+      const headline = firstText(document, [".text-body-medium.break-words", ".pv-text-details__left-panel .text-body-medium"]);
+      const sectionText = (id) => {
+        const a = document.getElementById(id);
+        const sec = a && a.closest("section");
+        return sec ? (sec.innerText || "").replace(/\s+\n/g, "\n").trim().slice(0, 2200) : "";
+      };
+      const about = sectionText("about");
+      const experience = sectionText("experience");
+      const companyLinks = [];
+      document.querySelectorAll('main a[href*="/company/"]').forEach((a) => {
+        const h = abs(a.getAttribute("href"));
+        if (/\/company\//.test(h) && !companyLinks.includes(h)) companyLinks.push(h);
+      });
+      const postText = [name && `Name: ${name}`, headline && `Headline: ${headline}`, about && `\nAbout:\n${about}`, experience && `\nExperience:\n${experience}`].filter(Boolean).join("\n");
+      let degree = "";
+      const dm = (firstText(document, [".dist-value", ".distance-badge"]) || "").match(/(1st|2nd|3rd)/i);
+      if (dm) degree = dm[1].toLowerCase();
+      return { authorName: name, headline, degree, authorProfileUrl: location.href.split("?")[0], postText, role: headline, previewCard: "", links: [], companyLinks, isProfile: true, postUrl: location.href.split("?")[0] };
+    }
+  }
+
+  // Most-visible feed/search post
+  const sel = ["div.feed-shared-update-v2", "div.fie-impression-container", '[data-urn*="urn:li:activity"]', '[data-id*="urn:li:activity"]'].join(",");
+  const posts = [...document.querySelectorAll(sel)];
+  if (posts.length) {
+    const cy = window.innerHeight / 2;
+    let best = null, bd = Infinity;
+    for (const p of posts) {
+      const r = p.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > window.innerHeight) continue;
+      const d = Math.abs((r.top + r.bottom) / 2 - cy);
+      if (d < bd) { bd = d; best = p; }
+    }
+    best = best || posts[0];
+    const actor = best.querySelector(".update-components-actor") || best;
+    const authorName = firstText(actor, ['.update-components-actor__title span[aria-hidden="true"]', ".update-components-actor__title", ".update-components-actor__name"]);
+    const headline = firstText(actor, [".update-components-actor__description"]);
+    let degree = "";
+    const dm = (actor.innerText || "").match(/(?:^|[•·\s])(1st|2nd|3rd)\b/i);
+    if (dm) degree = dm[1].toLowerCase();
+    const pl = actor.querySelector('a[href*="/in/"]') || best.querySelector('a[href*="/in/"]');
+    const authorProfileUrl = pl ? abs(pl.getAttribute("href")).split("?")[0] : "";
+    const postText = firstText(best, [".update-components-text", ".feed-shared-update-v2__description", ".feed-shared-inline-show-more-text"]);
+    const previewCard = firstText(best, [".update-components-article", ".feed-shared-article", ".update-components-entity"]);
+    const links = [], companyLinks = [];
+    best.querySelectorAll("a[href]").forEach((a) => {
+      const href = a.getAttribute("href") || "";
+      if (!href || href.startsWith("#")) return;
+      const full = abs(href);
+      let host = "";
+      try { host = new URL(full).hostname; } catch {}
+      if (/\/company\//.test(full) && !companyLinks.includes(full)) companyLinks.push(full);
+      const isLi = /(^|\.)linkedin\.com$/.test(host);
+      const keep = /^https?:/.test(full) && ((!isLi && !/\.licdn\.com$/.test(host)) || /\/jobs\/view\//.test(full));
+      if (keep && !links.includes(full) && links.length < 8) links.push(full);
     });
-  });
+    let postUrl = location.href;
+    const urnEl = best.matches("[data-urn]") ? best : best.querySelector("[data-urn]");
+    const urn = urnEl && urnEl.getAttribute("data-urn");
+    if (urn && /urn:li:activity/.test(urn)) postUrl = `https://www.linkedin.com/feed/update/${urn}/`;
+    if (postText || authorName) return { authorName, headline, degree, authorProfileUrl, postText, previewCard, links, companyLinks, postUrl };
+  }
+
+  // Selection fallback
+  const s = (window.getSelection && window.getSelection().toString().trim()) || "";
+  if (s.length > 30) return { authorName: "", headline: "", degree: "", authorProfileUrl: "", postText: s, role: "", previewCard: "", links: [], companyLinks: [], postUrl: location.href };
+  return null;
+}
+
+// Returns { post, reason }. Injects pageExtract on demand so it works on any
+// LinkedIn tab regardless of when it was opened (no reliance on a pre-injected script).
+async function getCurrentPost() {
+  let tab;
+  try {
+    [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  } catch {}
+  if (!tab || !/^https:\/\/([a-z-]+\.)?linkedin\.com\//.test(tab.url || "")) return { post: null, reason: "not_linkedin" };
+  try {
+    const [res] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: pageExtract });
+    const post = res && res.result;
+    return post ? { post, reason: null } : { post: null, reason: "no_post" };
+  } catch (e) {
+    return { post: null, reason: "cant_inject" };
+  }
 }
 
 function peopleSearch({ companyId, network, keywords } = {}) {
