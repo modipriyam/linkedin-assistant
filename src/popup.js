@@ -5,6 +5,9 @@ const $ = (id) => document.getElementById(id);
 const ANTHROPIC_DEFAULT = "claude-haiku-4-5-20251001";
 const OPENAI_DEFAULT = "gpt-4o-mini";
 
+// chrome.storage.session was added in Chrome 102; fall back to local on older installs.
+const sessionStore = chrome.storage.session ?? chrome.storage.local;
+
 try {
   $("ver").textContent = "v" + chrome.runtime.getManifest().version;
 } catch {}
@@ -150,7 +153,7 @@ function pageExtract() {
 async function getCurrentPost() {
   let tab;
   try {
-    [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
   } catch {}
   if (!tab || !/^https:\/\/([a-z-]+\.)?linkedin\.com\//.test(tab.url || "")) return { post: null, reason: "not_linkedin" };
   try {
@@ -210,7 +213,7 @@ function snapshot() {
 }
 function saveState() {
   try {
-    chrome.storage.session.set({ [STATE_KEY]: snapshot() });
+    sessionStore.set({ [STATE_KEY]: snapshot() });
   } catch {}
 }
 function saveStateDebounced() {
@@ -220,7 +223,7 @@ function saveStateDebounced() {
 async function restoreState() {
   let st;
   try {
-    st = (await chrome.storage.session.get(STATE_KEY))[STATE_KEY];
+    st = (await sessionStore.get(STATE_KEY))[STATE_KEY];
   } catch {}
   if (!st) return false;
   $("job_url").value = st.jobUrl || "";

@@ -268,7 +268,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         }
         case "openOptions": {
           if (chrome.runtime.openOptionsPage) chrome.runtime.openOptionsPage();
-          else await chrome.tabs.create({ url: chrome.runtime.getURL("popup.html") });
+          else await chrome.tabs.create({ url: chrome.runtime.getURL("src/popup.html") });
           sendResponse({ ok: true });
           break;
         }
